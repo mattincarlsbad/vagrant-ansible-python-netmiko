@@ -40,16 +40,8 @@ Vagrant.configure(2) do |config|
     leaf1.vm.boot_timeout = 3000
     # Internal networks for swp* interfaces.
     leaf1.vm.network "private_network", virtualbox__intnet: "10.0.0.0/24", auto_config: false
-    leaf1.vm.network "private_network", virtualbox__intnet: "sp1swp2-lf1swp2yyy", auto_config: false
-    leaf1.vm.network "private_network", virtualbox__intnet: "sp2swp2-lf1swp3yyy", auto_config: false
-    leaf1.vm.network "private_network", virtualbox__intnet: "lf1swp4-lf2swp4yyy", auto_config: false
-    leaf1.vm.network "private_network", virtualbox__intnet: "lf1swp5-lf2swp5yyy", auto_config: false
     leaf1.vm.provider "virtualbox" do |vb|
       vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
-      vb.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
-      vb.customize ["modifyvm", :id, "--nicpromisc4", "allow-all"]
-      vb.customize ["modifyvm", :id, "--nicpromisc5", "allow-all"]
-      vb.customize ["modifyvm", :id, "--nicpromisc6", "allow-all"]
     end
     # Enable eAPI in the EOS config
     leaf1.vm.provision 'shell', inline: <<-SHELL
@@ -62,6 +54,20 @@ Vagrant.configure(2) do |config|
       no switchport
       ip address 10.0.0.1 255.255.255.0
       exit"
+    SHELL
+  end
+
+  config.vm.define "leaf2" do |leaf2|
+    leaf2.vm.box = "CumulusCommunity/cumulus-vx"
+    # Internal network for swp* interfaces.
+    leaf2.vm.network "private_network", virtualbox__intnet: "10.0.0.0/24", auto_config: false
+    #set network interfaces to vbox promiscuous mode
+    leaf2.vm.provider "virtualbox" do |vb|
+      vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+    end
+    leaf2.vm.provision "shell", inline: <<-SHELL
+      sudo net add interface swp1 ip address 10.0.0.2/24
+      sudo net commit
     SHELL
   end
 
